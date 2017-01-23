@@ -3,9 +3,11 @@ package com.ytying.dao.impl;
 import com.ytying.dao.UserDao;
 import com.ytying.entity.User;
 import com.ytying.packaged.UserAccountDo;
+import com.ytying.util.HibernateUtils;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
@@ -23,8 +25,15 @@ public class UserDaoImpl implements UserDao {
     @Autowired
     private SessionFactory sessionFactory;
 
-    public UserAccountDo doLogin(String user_name, String password) {
+    @Autowired
+    private HibernateUtils hibernateUtils;
 
+    public User doLogin(String user_name, String password) {
+        Query query = sessionFactory.getCurrentSession().createQuery("from User u where u.user_name = :user_name and u.password = :password").setParameter("user_name", user_name).setParameter("password", password);
+        List<User> list = query.list();
+        if (list != null && list.size() > 0) {
+            return list.get(0);
+        }
         return null;
     }
 
@@ -39,7 +48,37 @@ public class UserDaoImpl implements UserDao {
 
     public boolean isExists(String user_name) {
         Query query = sessionFactory.getCurrentSession().createQuery("from User u where u.user_name = :user_name").setParameter("user_name", user_name);
-        System.out.println(query.list().size());
         return query.list().size() > 0 ? true : false;
+    }
+
+    public int addUser(User user) {
+
+        Session session = sessionFactory.openSession();
+        Transaction tx = session.getTransaction();
+        try {
+            tx.begin();
+            Query checkQuery = session.createQuery("from User u where u.user_name = :user_name").setParameter("user_name", user.getUser_name());
+            List<User> checkRepeatList = checkQuery.list();
+            if (checkRepeatList.size() > 0) {
+                //用户名重复
+                return 0;
+            } else if (checkRepeatList.size() == 0) {
+                session.save(user);
+            }
+            tx.commit();
+            Query getUidQuery = sessionFactory.openSession().createQuery("from User u where u.user_name = :user_name").setParameter("user_name", user.getUser_name());
+            List<User> getUidList = getUidQuery.list();
+            if (getUidList.size() > 0) {
+                return getUidList.get(0).getUid();
+            } else {
+                //插入失败
+                return -1;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            session.close();
+        }
+        return -1;
     }
 }

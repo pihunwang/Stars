@@ -11,7 +11,11 @@ public enum ReturnCode {
     RETURN_PARAMERROR(1003, 1, "请求参数错误", TipType.TOAST),
     RETURN_UserLogin_FAIL_SERVICERROR(1005, 1, "登录服务异常", TipType.TOAST),
     RETURN_UserLogin_SUCCESS(1006, 0, "登录成功", TipType.TOAST),
-    RETURN_USERNAMEORPASSERROR(1008, 1, "用户名或密码错误", TipType.TOAST);
+    RETURN_USERNAMEORPASSERROR(1008, 1, "用户名或密码错误", TipType.TOAST),
+    RETURN_USER_ALREADY_EXISTS(1009, 1, "该用户已存在", TipType.TOAST),
+
+    RETURN_NOTOKEN_ERROR(9998, 98, "无权限访问，请登录!", TipType.TOAST),
+    RETURN_TOKEN_OUTDATE(9999, 99, "您的Token已过期，请重新登录!", TipType.TOAST);
 
     public int sn;
     public int code;

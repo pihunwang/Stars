@@ -10,10 +10,11 @@ import java.util.List;
  */
 public interface UserDao {
 
-    UserAccountDo doLogin(String user_name, String password);
+    User doLogin(String user_name, String password);
 
-    //得到所有用户
     List<User> getAllUser();
 
     boolean isExists(String user_name);
+
+    int addUser(User user);
 }

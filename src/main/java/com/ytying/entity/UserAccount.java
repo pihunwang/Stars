@@ -14,6 +14,7 @@ public class UserAccount {
     @Id
     private int uid;
     private long c_time;
+    private long survive_time;
     private String token;
 
     public int getUid() {
@@ -38,5 +39,13 @@ public class UserAccount {
 
     public void setC_time(long c_time) {
         this.c_time = c_time;
+    }
+
+    public long getSurvive_time() {
+        return survive_time;
+    }
+
+    public void setSurvive_time(long survive_time) {
+        this.survive_time = survive_time;
     }
 }

@@ -21,7 +21,7 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private UserDao userDao;
 
-    public UserAccountDo doLogin(String user_name, String password) {
+    public User doLogin(String user_name, String password) {
         return userDao.doLogin(user_name,password);
     }
 
@@ -32,5 +32,9 @@ public class UserServiceImpl implements UserService {
     @Cacheable(cacheNames = "isExists", key = "#user_name")
     public boolean isExists(String user_name) {
         return userDao.isExists(user_name);
+    }
+
+    public int addUser(User user) {
+        return userDao.addUser(user);
     }
 }

@@ -10,9 +10,11 @@ import java.util.List;
  */
 public interface UserService {
 
-    UserAccountDo doLogin(String user_name, String password);
+    User doLogin(String user_name, String password);
 
     List<User> getAllUser();
 
     boolean isExists(String userName);
+
+    int addUser(User user);
 }

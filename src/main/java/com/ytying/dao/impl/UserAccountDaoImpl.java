@@ -32,7 +32,10 @@ public class UserAccountDaoImpl implements UserAccountDao {
     public UserAccount getUserAccountByUid(int uid) {
         Query query = sessionFactory.getCurrentSession().createQuery("from UserAccount ua where ua.uid = :uid").setParameter("uid", uid);
         List<UserAccount> list = query.list();
-        return list.get(0);
+        if (list != null && list.size() > 0) {
+            return list.get(0);
+        }
+        return null;
     }
 
     public UserAccount getNewUserAccountByUid(int uid) {

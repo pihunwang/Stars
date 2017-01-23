@@ -1,6 +1,7 @@
 package com.ytying;
 
 import com.ytying.cache.TokenCache;
+import com.ytying.controller.UserController;
 import com.ytying.dao.UserAccountDao;
 import com.ytying.entity.User;
 import com.ytying.entity.UserAccount;
@@ -49,22 +50,10 @@ public class TestMySQL {
     @Autowired
     private UserService userService;
 
-    @Autowired
-    private UserAccountService userAccountDao;
-
     @Test
     public void testDataSource() throws SQLException {
-
-//        UserAccount user = new UserAccount();
-//        user.setUid(3);
-//        user.setC_time(new Date().getTime());
-//        user.setToken("J2w8If0v");
-//        hibernateUtils.add(user);
-
-//        System.out.println(new Date().getTime());
-//        System.out.println(System.currentTimeMillis());
-
-        System.out.println(TokenCache.tokenSize());
+        User user = userService.doLogin("admin","caca357");
+        System.out.println(user.getUser_name());
     }
 
 }

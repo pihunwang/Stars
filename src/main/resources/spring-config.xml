@@ -17,6 +17,29 @@
                                 expression="org.springframework.web.bind.annotation.ControllerAdvice"/>
     </context:component-scan>
 
+    <!-- token拦截器 -->
+    <mvc:interceptors>
+        <mvc:interceptor>
+            <!-- 需拦截的地址 -->
+            <!-- 一级目录 -->
+            <mvc:mapping path="/**" />
+            <!-- 需排除拦截的地址 -->
+            <mvc:exclude-mapping path="/"/>
+            <mvc:exclude-mapping path="/400"/>
+            <mvc:exclude-mapping path="/404"/>
+            <mvc:exclude-mapping path="/500"/>
+            <mvc:exclude-mapping path="/favicon"/>
+            <mvc:exclude-mapping path="/robots.txt"/>
+            <mvc:exclude-mapping path="/user/UserLogin"/>
+            <mvc:exclude-mapping path="/user/UserAdd"/>
+            <mvc:exclude-mapping path="/gel/AppConfigGet"/>
+            <mvc:exclude-mapping path="/gel/UnupdateVersionListGet"/>
+
+            <bean class="com.ytying.interceptor.TokenInterceptor" />
+        </mvc:interceptor>
+    </mvc:interceptors>
+
+
     <!-- 配置视图解析器 -->
     <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
         <property name="prefix" value="/"></property>

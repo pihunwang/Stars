@@ -7,8 +7,17 @@ import com.ytying.entity.User;
  */
 public class UserAccountDo {
 
+    private int uid;
     private String user_name;
     private String token;
+
+    public int getUid() {
+        return uid;
+    }
+
+    public void setUid(int uid) {
+        this.uid = uid;
+    }
 
     public String getUser_name() {
         return user_name;

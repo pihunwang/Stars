@@ -2,10 +2,16 @@ package com.ytying.interceptor;
 
 import com.ytying.cache.TokenCache;
 import com.ytying.entity.UserAccount;
+import com.ytying.packaged.ResultDo;
+import com.ytying.sysenum.ReturnCode;
+import com.ytying.util.JsonUtils;
 import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.Date;
 
 /**
  * Created by kefan.wkf on 17/1/20.
@@ -18,10 +24,30 @@ public class TokenInterceptor extends HandlerInterceptorAdapter {
         String token = request.getParameter("token");
         UserAccount account = TokenCache.get(token);
 
-        if(null == token || account == null){
-
+        if (null == token || null == account) {
+            setResponseContent(response, ReturnCode.RETURN_NOTOKEN_ERROR);
+            return false;
         }
 
-        return super.preHandle(request, response, handler);
+        if((account.getSurvive_time() + account.getC_time()) < new Date().getTime()){
+            TokenCache.remove(account);
+            setResponseContent(response,ReturnCode.RETURN_TOKEN_OUTDATE);
+            return false;
+        }
+
+        account.setSurvive_time(new Date().getTime() - account.getC_time() + account.getSurvive_time());
+
+        return true;
+    }
+
+    private static void setResponseContent(HttpServletResponse response, ReturnCode code) throws IOException {
+        response.setCharacterEncoding("UTF-8");
+        response.setContentType("application/json;charset=utf-8");
+        response.setHeader("Content-Type", "application/json; charset=utf-8");
+        PrintWriter out = response.getWriter();
+        out.print(JsonUtils.Object2Json(new ResultDo(code, null)));
+        out.flush();
+        out.close();
+        response.setStatus(500);
     }
 }
