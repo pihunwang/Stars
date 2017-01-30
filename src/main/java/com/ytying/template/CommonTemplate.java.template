@@ -1,0 +1,8 @@
+package $packageName;
+
+public class $className implements com.ytying.template.CommonTemplate{
+    public $className(){
+        $className.main(new String[]{});
+    }
+    $sourceCode
+}

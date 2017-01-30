@@ -28,12 +28,11 @@
             <mvc:exclude-mapping path="/400"/>
             <mvc:exclude-mapping path="/404"/>
             <mvc:exclude-mapping path="/500"/>
-            <mvc:exclude-mapping path="/favicon"/>
-            <mvc:exclude-mapping path="/robots.txt"/>
+            <mvc:exclude-mapping path="/js/*"/>
+            <mvc:exclude-mapping path="/statics/*"/>
+            <mvc:exclude-mapping path="/views/*"/>
             <mvc:exclude-mapping path="/user/UserLogin"/>
             <mvc:exclude-mapping path="/user/UserAdd"/>
-            <mvc:exclude-mapping path="/gel/AppConfigGet"/>
-            <mvc:exclude-mapping path="/gel/UnupdateVersionListGet"/>
 
             <bean class="com.ytying.interceptor.TokenInterceptor" />
         </mvc:interceptor>
@@ -42,12 +41,14 @@
 
     <!-- 配置视图解析器 -->
     <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
-        <property name="prefix" value="/"></property>
-        <property name="suffix" value=".jsp"></property>
+        <property name="prefix" value="/WEB-INF/views"></property>
+        <property name="suffix" value=".html"></property>
     </bean>
 
     <!-- 配置静态资源 -->
     <mvc:default-servlet-handler/>
+    <mvc:resources mapping="/statics/**" location="WEB-INF/statics/"/>
+    <mvc:resources mapping="/views/**" location="WEB-INF/views/"/>
 
     <!-- Spring 乱码问题 -->
     <mvc:annotation-driven>

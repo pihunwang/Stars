@@ -8,8 +8,6 @@ import com.ytying.service.UserAccountService;
 import com.ytying.service.UserService;
 import com.ytying.sysenum.ReturnCode;
 import com.ytying.sysenum.TokenType;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -25,8 +23,6 @@ import java.util.List;
 @RequestMapping(value = "/user")
 public class UserController extends BaseController {
 
-    private transient final Log log = LogFactory.getLog(UserController.class);
-
     @Autowired
     private UserService userService;
 
@@ -40,7 +36,7 @@ public class UserController extends BaseController {
         User user = userService.doLogin(user_name, password);
 
         if (null == user) {
-            return jsonResultNew(ReturnCode.RETURN_USERNAMEORPASSERROR, null);
+            return jsonResultNew(ReturnCode.RETURN_USER_NAME_OR_PASS_ERROR, null);
         } else {
             UserAccount newAccount = userAccountService.getNewUserAccountByUid(user.getUid());
             newAccount.setSurvive_time(TokenType.SHORTTIME.survivetime);

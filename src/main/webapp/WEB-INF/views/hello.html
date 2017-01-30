@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Hello</title>
+    <script type="text/javascript"
+            src="../../js/jquery-1.12.4.min.js"></script>
+    <style type="text/css">
+        textarea {
+            width: 100%;
+            height: 100%;
+            FONT-FAMILY: Tahoma, Verdana, Arial, sans-serif !important;
+            FONT-SIZE: 12px
+        }
+
+        .java {
+            width: 50%;
+        }
+    </style>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $("#text").focus();
+            $("#btn").click(function () {
+                console.log("hahah");
+            })
+        });
+
+        function demo() {
+            $("#text").text("public class Main{ \n" +
+                    "public static void main(String[] args) { \n" +
+                    "//输入参数 用逗号分隔\n" +
+                    "Scanner sc=new Scanner(System.in);\n" +
+                    "String s=sc.next(); \r\n" +
+                    "String bs[]=s.split(\",\");\r\n" +
+                    "System.out.println(\"请输入参数:\");\r\n" +
+                    "for(int i=0;i<bs.length ;i++){\r\n" +
+                    "System.out.println(\"第\"+(i+1)+\"个参数:\"+bs[i]);\r\n}\n" +
+                    "}\n" +
+                    "}");
+        }
+    </script>
+</head>
+<body>
+<form action="http://localhost:8080/code/sourceCompiler" method="post">
+    <TABLE id="forum_main" cellSpacing=1>
+
+
+        <TBODY>
+
+        <tr>
+            <td>public class HelloWorld{<textarea id="text" name="source">
+
+		public static void main(String[] args) {
+		System.out.println("Hello World!");
+					}</textarea><br/>}
+            </td>
+        </tr>
+        <tr>
+            <td>输入参数<input type="text" name="token"/><input type="submit" value="运行" class="button"/>
+                <input type="button" value="例子" class="button" onclick="demo()"/>
+            </td>
+        </tr>
+
+        </TBODY>
+    </TABLE>
+</form>
+<button id="btn">测试按钮</button>
+</body>
+</html>
