@@ -1,13 +1,12 @@
 package com.ytying.controller;
 
-import com.sun.org.apache.bcel.internal.classfile.Code;
-import com.ytying.classloader.MyClassLoader;
+import com.ytying.compiler.CompilerClassLoader;
+import com.ytying.entity.UserCode;
+import com.ytying.service.UserCodeService;
 import com.ytying.sysenum.ReturnCode;
-import com.ytying.template.CommonTemplate;
-import com.ytying.util.CompilerPrintStream;
-import com.ytying.util.JavaSourceFromString;
-import com.ytying.util.StringUtils;
-import javaxtools.compiler.CharSequenceCompilerException;
+import com.ytying.compiler.CompilerPrintStream;
+import com.ytying.compiler.JavaSourceFromString;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -16,11 +15,9 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import javax.tools.*;
 import java.io.*;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Arrays;
-import java.util.Random;
-
-import static com.ytying.sysenum.ReturnCode.RETURN_CodeMake_COMPILE_ERROR;
-import static com.ytying.sysenum.ReturnCode.RETURN_SUCCESS;
+import java.util.Date;
 
 /**
  * Created by kefan.wkf on 17/1/23.
@@ -29,14 +26,21 @@ import static com.ytying.sysenum.ReturnCode.RETURN_SUCCESS;
 @RequestMapping(value = "/code")
 public class CodeController extends BaseController {
 
+    @Autowired
+    private UserCodeService userCodeService;
+
+    private final String classDir = "/Users/UKfire/Desktop/WkfCode/Stars/target/classes";
+
     @RequestMapping(value = "/sourceCompiler")
     @ResponseBody
-    public String compilerSource(@RequestParam String source) throws Exception {
+    public String compilerSource(@RequestParam String source,
+                                 @RequestParam int uid) throws IOException {
 
-        MyClassLoader myClassLoader = new MyClassLoader("/Users/UKfire/Desktop/WkfCode/Stars/target/classes");
+        CompilerClassLoader compilerClassLoader = new CompilerClassLoader(classDir);
 
-        String className = "jiba" + new Random().nextInt(1000);
+        String className = "Uid" + uid + "Time" + new Date().getTime();
 
+        //拼接代码,生成JavaFileObject
         StringWriter writer = new StringWriter();
         PrintWriter out = new PrintWriter(writer);
         out.println("package com.ytying.source;");
@@ -44,14 +48,13 @@ public class CodeController extends BaseController {
         out.println(source);
         out.println("}");
         out.close();
-        System.out.println(writer.toString());
         JavaFileObject file = new JavaSourceFromString(className, writer.toString());
 
         //获取JavaCompiler
         JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
 
         //TODO some problems
-        String sOutputPath = "/Users/UKfire/Desktop/WkfCode/Stars/target/classes/";
+        String sOutputPath = classDir;
 
         DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<JavaFileObject>();
 
@@ -64,40 +67,43 @@ public class CodeController extends BaseController {
         Iterable<? extends JavaFileObject> compilationUnits = Arrays.asList(file);
         JavaCompiler.CompilationTask task = compiler.getTask(null, oStandardJavaFileManager, diagnostics, null, null, compilationUnits);
 
-
         boolean success = task.call();
-        for (Diagnostic diagnostic : diagnostics.getDiagnostics()) {
-            System.out.println(diagnostic.getCode());
-            System.out.println(diagnostic.getKind());
-            System.out.println(diagnostic.getPosition());
-            System.out.println(diagnostic.getStartPosition());
-            System.out.println(diagnostic.getEndPosition());
-            System.out.println(diagnostic.getSource());
-            System.out.println(diagnostic.getMessage(null));
-        }
         System.out.println("Success: " + success);
 
         if (success) {
+            //保存用户代码到数据库
+            UserCode userCode = new UserCode();
+            userCode.setUid(uid);
+            userCode.setSource_code(source);
+            userCode.setTime(new Date().getTime());
+            userCodeService.addUserCode(userCode);
             try {
                 StringBuilder compileResult = new StringBuilder("");
                 System.setOut(new CompilerPrintStream(System.out, compileResult));
-                Class.forName("com.ytying.source." + className, true, myClassLoader).getDeclaredMethod("main", new Class[]{String[].class})
-                        .invoke(null, new Object[]{null});
+                Class c = Class.forName("com.ytying.source." + className, true, compilerClassLoader);
+                Method main = c.getDeclaredMethod("main", new Class[]{String[].class});
+                main.setAccessible(true);
+                main.invoke(null, new Object[]{null});
                 return jsonResultNew(ReturnCode.RETURN_SUCCESS, compileResult.toString());
             } catch (ClassNotFoundException e) {
-                System.err.println("Class not found: " + e);
-                return "Class not found: " + e;
+                return jsonResultNew(ReturnCode.RETURN_CodeMake_UNKNOW_ERROR, e);
             } catch (NoSuchMethodException e) {
-                System.err.println("No such method: " + e);
+                return jsonResultNew(ReturnCode.RETURN_CodeMake_UNKNOW_ERROR, e);
             } catch (IllegalAccessException e) {
-                System.err.println("Illegal access: " + e);
+                return jsonResultNew(ReturnCode.RETURN_CodeMake_UNKNOW_ERROR, e);
             } catch (InvocationTargetException e) {
-                System.err.println("Invocation target: " + e);
+                return jsonResultNew(ReturnCode.RETURN_CodeMake_UNKNOW_ERROR, e);
             } catch (NullPointerException e) {
-                System.err.println("Null Pointer: " + e);
+                return jsonResultNew(ReturnCode.RETURN_CodeMake_UNKNOW_ERROR, e);
             }
+        } else {
+            StringBuilder errs = new StringBuilder("");
+            for (Diagnostic diagnostic : diagnostics.getDiagnostics()) {
+                errs.append(diagnostic.toString() + "\n");
+            }
+            System.out.println(errs);
+            return jsonResultNew(ReturnCode.RETURN_CodeMake_COMPILE_ERROR, errs.toString());
         }
-        return jsonResultNew(ReturnCode.RETURN_ERROR, null);
     }
 
 }

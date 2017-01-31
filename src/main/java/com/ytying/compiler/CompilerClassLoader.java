@@ -1,15 +1,16 @@
-package com.ytying.classloader;
+package com.ytying.compiler;
 
 import java.io.*;
 
 /**
  * Created by kefan.wkf on 17/1/30.
+ * 用于读取存放在classes文件夹中class文件的自定义ClassLoader
  */
-public class MyClassLoader extends ClassLoader {
+public class CompilerClassLoader extends ClassLoader {
 
     private String rootDir;
 
-    public MyClassLoader(String rootDir) {
+    public CompilerClassLoader(String rootDir) {
         this.rootDir = rootDir;
     }
 
@@ -36,7 +37,7 @@ public class MyClassLoader extends ClassLoader {
             }
             return baos.toByteArray();
         } catch (IOException e) {
-            System.err.println("MyClassLoader IOException: " + e);
+            System.err.println("CompilerClassLoader IOException: " + e);
         }
         return null;
     }

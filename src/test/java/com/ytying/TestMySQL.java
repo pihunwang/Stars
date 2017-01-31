@@ -1,6 +1,8 @@
 package com.ytying;
 
-import com.ytying.classloader.MyClassLoader;
+import com.ytying.compiler.CompilerClassLoader;
+import com.ytying.compiler.JavaSourceFromString;
+import com.ytying.util.StringUtils;
 import org.junit.*;
 import org.junit.runner.RunWith;
 import org.springframework.test.context.ContextConfiguration;
@@ -32,66 +34,61 @@ public class TestMySQL {
         //TODO 试试循环会发生什么!!! 答:循环的话,如果class是同一个全名,则出发缓存机制,如果class全名不同,则顺利完成,由此推测是ClassLoader的问题;
         //TODO 试试自定义ClassLoader怎么样!!!这这里,自定义ClassLoader可以成功完成,接下来试试在Tomcat容器中会发生什么,经过测试发现自定义ClassLoader可以很好解决问题;
 
-        MyClassLoader myClassLoader = new MyClassLoader("/Users/UKfire/Desktop/WkfCode/Stars/target/classes");
+        CompilerClassLoader compilerClassLoader = new CompilerClassLoader("/Users/UKfire/Desktop/WkfCode/Stars/target/classes");
 
         JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
         String sOutputPath = "./target/classes";
 
-        int i = 10;
-        while (i-- > 0) {
-            String className = "heihei" + new Random().nextInt(100);
-            StringWriter writer = new StringWriter();
-            PrintWriter out = new PrintWriter(writer);
-            out.println("package com.ytying.source;");
-            out.println("public class " + className + " {");
-            out.println("  public static void main(String args[]) {");
-            out.println("    System.out.println(\"heihei = " + i + "\");");
-            out.println("  }");
-            out.println("}");
-            out.close();
-            JavaFileObject file = new JavaSourceFromString(className, writer.toString());
+        String className = "hei";
+        StringWriter writer = new StringWriter();
+        PrintWriter out = new PrintWriter(writer);
+        out.println("package com.ytying.source;");
+        out.println("public class " + className + "");
+        out.println("  public static void main(String args[]) {");
+        out.println("    System.out.println(\"heihei =ppp\")");
+        out.println("  }");
+        out.println("}");
+        out.close();
+        JavaFileObject file = new JavaSourceFromString(className, writer.toString());
 
-            DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<JavaFileObject>();
+        DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<JavaFileObject>();
 
-            StandardJavaFileManager oStandardJavaFileManager = compiler.
-                    getStandardFileManager(diagnostics, null, null);
+        StandardJavaFileManager oStandardJavaFileManager = compiler.
+                getStandardFileManager(diagnostics, null, null);
 
-            JavaFileManager.Location oLocation = StandardLocation.CLASS_OUTPUT;
-            oStandardJavaFileManager.setLocation(oLocation, Arrays
-                    .asList(new File[]{new File(sOutputPath)}));
+        JavaFileManager.Location oLocation = StandardLocation.CLASS_OUTPUT;
+        oStandardJavaFileManager.setLocation(oLocation, Arrays
+                .asList(new File[]{new File(sOutputPath)}));
 
-            Iterable<? extends JavaFileObject> compilationUnits = Arrays.asList(file);
-            JavaCompiler.CompilationTask task = compiler.getTask(null, oStandardJavaFileManager, diagnostics, null, null, compilationUnits);
+        Iterable<? extends JavaFileObject> compilationUnits = Arrays.asList(file);
+        JavaCompiler.CompilationTask task = compiler.getTask(null, oStandardJavaFileManager, diagnostics, null, null, compilationUnits);
 
 
-            boolean success = task.call();
+        boolean success = task.call();
+        System.out.println("Success: " + success);
+
+        if (success) {
+            try {
+                Class c = Class.forName("com.ytying.source." + className, true, compilerClassLoader);
+                Method main = c.getDeclaredMethod("main", new Class[]{String[].class});
+                main.setAccessible(true);
+                main.invoke(null, new Object[]{null});
+            } catch (ClassNotFoundException e) {
+                System.err.println("Class not found: " + e);
+            } catch (NoSuchMethodException e) {
+                System.err.println("No such method: " + e);
+            } catch (IllegalAccessException e) {
+                System.err.println("Illegal access: " + e);
+            } catch (InvocationTargetException e) {
+                System.err.println("Invocation target: " + e);
+            }
+        } else {
+            StringBuilder errs = new StringBuilder("");
             for (Diagnostic diagnostic : diagnostics.getDiagnostics()) {
-                System.out.println(diagnostic.getCode());
-                System.out.println(diagnostic.getKind());
-                System.out.println(diagnostic.getPosition());
-                System.out.println(diagnostic.getStartPosition());
-                System.out.println(diagnostic.getEndPosition());
-                System.out.println(diagnostic.getSource());
-                System.out.println(diagnostic.getMessage(null));
+                errs.append(diagnostic.toString() + "\n");
             }
-            System.out.println("Success: " + success);
-
-            if (success) {
-                try {
-                    Class.forName("com.ytying.source." + className,true,myClassLoader).getDeclaredMethod("main", new Class[]{String[].class})
-                            .invoke(null, new Object[]{null});
-                } catch (ClassNotFoundException e) {
-                    System.err.println("Class not found: " + e);
-                } catch (NoSuchMethodException e) {
-                    System.err.println("No such method: " + e);
-                } catch (IllegalAccessException e) {
-                    System.err.println("Illegal access: " + e);
-                } catch (InvocationTargetException e) {
-                    System.err.println("Invocation target: " + e);
-                }
-            }
+            System.out.println(errs);
         }
-
 
     }
 
@@ -149,18 +146,4 @@ public class TestMySQL {
         }
     }
 
-}
-
-class JavaSourceFromString extends SimpleJavaFileObject {
-    final String code;
-
-    JavaSourceFromString(String name, String code) {
-        super(URI.create("string:///" + name.replace('.', '/') + Kind.SOURCE.extension), Kind.SOURCE);
-        this.code = code;
-    }
-
-    @Override
-    public CharSequence getCharContent(boolean ignoreEncodingErrors) {
-        return code;
-    }
 }
