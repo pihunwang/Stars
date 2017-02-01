@@ -15,7 +15,7 @@ public class TestCompile {
 
     @Test
     public void testStringUtils() {
-        System.out.println(StringUtils.getClassNameFromSourceCode("public class Main  {\npublic static void main(String[] args){"));
+        System.out.println(StringUtils.replaceClassNameFromSourceCode("public class Main  {\npublic static void main(String[] args){\n}\n}","Gao"));
     }
 
 }

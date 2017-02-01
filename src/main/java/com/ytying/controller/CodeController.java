@@ -1,11 +1,13 @@
 package com.ytying.controller;
 
 import com.ytying.compiler.CompilerClassLoader;
+import com.ytying.constant.Dir;
 import com.ytying.entity.UserCode;
 import com.ytying.service.UserCodeService;
 import com.ytying.sysenum.ReturnCode;
 import com.ytying.compiler.CompilerPrintStream;
 import com.ytying.compiler.JavaSourceFromString;
+import com.ytying.util.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -18,6 +20,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.Scanner;
 
 /**
  * Created by kefan.wkf on 17/1/23.
@@ -29,24 +32,20 @@ public class CodeController extends BaseController {
     @Autowired
     private UserCodeService userCodeService;
 
-    private final String classDir = "/Users/UKfire/Desktop/WkfCode/Stars/target/classes";
-
     @RequestMapping(value = "/sourceCompiler")
     @ResponseBody
     public String compilerSource(@RequestParam String source,
                                  @RequestParam int uid) throws IOException {
 
-        CompilerClassLoader compilerClassLoader = new CompilerClassLoader(classDir);
+        CompilerClassLoader compilerClassLoader = new CompilerClassLoader(Dir.classPathDir);
 
-        String className = "Uid" + uid + "Time" + new Date().getTime();
+        String className = StringUtils.getClassNameFromSourceCode(source);
 
         //拼接代码,生成JavaFileObject
         StringWriter writer = new StringWriter();
         PrintWriter out = new PrintWriter(writer);
         out.println("package com.ytying.source;");
-        out.println("public class " + className + "{");
-        out.println(source);
-        out.println("}");
+        out.print(source);
         out.close();
         JavaFileObject file = new JavaSourceFromString(className, writer.toString());
 
@@ -54,7 +53,7 @@ public class CodeController extends BaseController {
         JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
 
         //TODO some problems
-        String sOutputPath = classDir;
+        String sOutputPath = Dir.classPathDir;
 
         DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<JavaFileObject>();
 
@@ -101,7 +100,7 @@ public class CodeController extends BaseController {
             for (Diagnostic diagnostic : diagnostics.getDiagnostics()) {
                 errs.append(diagnostic.toString() + "\n");
             }
-            System.out.println(errs);
+            System.out.println(errs.toString());
             return jsonResultNew(ReturnCode.RETURN_CodeMake_COMPILE_ERROR, errs.toString());
         }
     }
