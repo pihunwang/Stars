@@ -44,7 +44,6 @@ public class CodeController extends BaseController {
         //拼接代码,生成JavaFileObject
         StringWriter writer = new StringWriter();
         PrintWriter out = new PrintWriter(writer);
-        out.println("package com.ytying.source;");
         out.print(source);
         out.close();
         JavaFileObject file = new JavaSourceFromString(className, writer.toString());
@@ -79,7 +78,7 @@ public class CodeController extends BaseController {
             try {
                 StringBuilder compileResult = new StringBuilder("");
                 System.setOut(new CompilerPrintStream(System.out, compileResult));
-                Class c = Class.forName("com.ytying.source." + className, true, compilerClassLoader);
+                Class c = Class.forName(className, true, compilerClassLoader);
                 Method main = c.getDeclaredMethod("main", new Class[]{String[].class});
                 main.setAccessible(true);
                 main.invoke(null, new Object[]{null});

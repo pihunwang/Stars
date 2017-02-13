@@ -42,10 +42,9 @@ public class TestMySQL {
         String className = "hei";
         StringWriter writer = new StringWriter();
         PrintWriter out = new PrintWriter(writer);
-        out.println("package com.ytying.source;");
-        out.println("public class " + className + "");
+        out.println("public class " + className + " {");
         out.println("  public static void main(String args[]) {");
-        out.println("    System.out.println(\"heihei =ppp\")");
+        out.println("    System.out.println(\"hooo$textsize-title-small=ppp\");");
         out.println("  }");
         out.println("}");
         out.close();
@@ -69,7 +68,7 @@ public class TestMySQL {
 
         if (success) {
             try {
-                Class c = Class.forName("com.ytying.source." + className, true, compilerClassLoader);
+                Class c = Class.forName(className, true, compilerClassLoader);
                 Method main = c.getDeclaredMethod("main", new Class[]{String[].class});
                 main.setAccessible(true);
                 main.invoke(null, new Object[]{null});
