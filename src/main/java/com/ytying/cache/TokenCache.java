@@ -11,6 +11,7 @@ import java.util.Map;
 
 /**
  * Created by kefan.wkf on 17/1/20.
+ * Token缓存器
  */
 @Component
 public class TokenCache implements InitializingBean {
@@ -36,6 +37,7 @@ public class TokenCache implements InitializingBean {
         return tokenCache.size();
     }
 
+    @Override
     public void afterPropertiesSet() throws Exception {
         for(UserAccount acc : userAccountService.getUserAccountList()){
             tokenCache.put(acc.getToken(),acc);

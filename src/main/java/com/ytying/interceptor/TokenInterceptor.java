@@ -15,6 +15,7 @@ import java.util.Date;
 
 /**
  * Created by kefan.wkf on 17/1/20.
+ * token过滤器
  */
 public class TokenInterceptor extends HandlerInterceptorAdapter {
 
