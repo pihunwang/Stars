@@ -1,5 +1,6 @@
 package com.ytying.controller;
 
+import com.sun.org.apache.bcel.internal.classfile.Code;
 import com.ytying.compiler.CompilerClassLoader;
 import com.ytying.constant.Dir;
 import com.ytying.entity.UserCode;
@@ -32,12 +33,15 @@ public class CodeController extends BaseController {
     @Autowired
     private UserCodeService userCodeService;
 
+    // 项目Class文件所在绝对路径
+    private String dir = this.getClass().getResource("/").getPath();
+
     @RequestMapping(value = "/sourceCompiler")
     @ResponseBody
     public String compilerSource(@RequestParam String source,
                                  @RequestParam int uid) throws IOException {
 
-        CompilerClassLoader compilerClassLoader = new CompilerClassLoader(Dir.classPathDir);
+        CompilerClassLoader compilerClassLoader = new CompilerClassLoader(dir);
 
         String className = StringUtils.getClassNameFromSourceCode(source);
 
@@ -51,8 +55,7 @@ public class CodeController extends BaseController {
         //获取JavaCompiler
         JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
 
-        //TODO some problems
-        String sOutputPath = Dir.classPathDir;
+        String sOutputPath = dir;
 
         DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<JavaFileObject>();
 

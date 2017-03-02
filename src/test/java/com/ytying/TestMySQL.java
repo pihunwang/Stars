@@ -2,6 +2,7 @@ package com.ytying;
 
 import com.ytying.compiler.CompilerClassLoader;
 import com.ytying.compiler.JavaSourceFromString;
+import com.ytying.constant.Dir;
 import com.ytying.util.StringUtils;
 import org.junit.*;
 import org.junit.runner.RunWith;
@@ -28,6 +29,12 @@ import java.util.Random;
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(locations = {"classpath:applicationContext.xml"})
 public class TestMySQL {
+
+    @Test
+    public void testPath() {
+        String path = Dir.class.getClass().getResource("/").getPath();
+        System.out.println(path == null ? "null" : path);
+    }
 
     @Test
     public void testHello() throws Exception {

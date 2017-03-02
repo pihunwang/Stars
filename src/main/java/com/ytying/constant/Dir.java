@@ -5,6 +5,6 @@ package com.ytying.constant;
  */
 public class Dir {
 
-    public static String classPathDir = "/Users/UKfire/Desktop/WkfCode/Stars/target/classes";
+    public static String classPathDir = "/";
 
 }

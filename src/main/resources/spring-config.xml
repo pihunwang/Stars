@@ -35,6 +35,7 @@
             <mvc:exclude-mapping path="/user/UserAdd"/>
             <mvc:exclude-mapping path="/code/sourceCompiler"/>
             <mvc:exclude-mapping path="/article/catalogListGet"/>
+            <mvc:exclude-mapping path="/article/articleGet"/>
 
             <bean class="com.ytying.interceptor.TokenInterceptor" />
         </mvc:interceptor>
