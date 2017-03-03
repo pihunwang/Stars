@@ -1,8 +1,6 @@
 package com.ytying.controller;
 
-import com.sun.org.apache.bcel.internal.classfile.Code;
 import com.ytying.compiler.CompilerClassLoader;
-import com.ytying.constant.Dir;
 import com.ytying.entity.UserCode;
 import com.ytying.service.UserCodeService;
 import com.ytying.sysenum.ReturnCode;
@@ -17,11 +15,10 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.tools.*;
 import java.io.*;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.Scanner;
+import java.util.concurrent.*;
 
 /**
  * Created by kefan.wkf on 17/1/23.
@@ -81,21 +78,31 @@ public class CodeController extends BaseController {
             try {
                 StringBuilder compileResult = new StringBuilder("");
                 System.setOut(new CompilerPrintStream(System.out, compileResult));
-                Class c = Class.forName(className, true, compilerClassLoader);
-                Method main = c.getDeclaredMethod("main", new Class[]{String[].class});
-                main.setAccessible(true);
-                main.invoke(null, new Object[]{null});
-                return jsonResultNew(ReturnCode.RETURN_SUCCESS, compileResult.toString());
-            } catch (ClassNotFoundException e) {
-                return jsonResultNew(ReturnCode.RETURN_CodeMake_UNKNOW_ERROR, e);
-            } catch (NoSuchMethodException e) {
-                return jsonResultNew(ReturnCode.RETURN_CodeMake_UNKNOW_ERROR, e);
-            } catch (IllegalAccessException e) {
-                return jsonResultNew(ReturnCode.RETURN_CodeMake_UNKNOW_ERROR, e);
-            } catch (InvocationTargetException e) {
-                return jsonResultNew(ReturnCode.RETURN_CodeMake_UNKNOW_ERROR, e);
+
+
+                Callable<String> callable = new Callable<String>() {
+                    @Override
+                    public String call() throws Exception {
+                        Class c = Class.forName(className, true, compilerClassLoader);
+                        Method main = c.getDeclaredMethod("main", new Class[]{String[].class});
+                        main.setAccessible(true);
+                        main.invoke(null, new Object[]{null});
+                        return jsonResultNew(ReturnCode.RETURN_SUCCESS,compileResult.toString());
+                    }
+                };
+                FutureTask<String> future = new FutureTask<String>(callable);
+                new Thread(future).start();
+                future.get(5000, TimeUnit.MILLISECONDS);    // 设置超时时间,以防用户提交死循环代码
+
+                return jsonResultNew(ReturnCode.RETURN_SUCCESS,compileResult.toString());
             } catch (NullPointerException e) {
                 return jsonResultNew(ReturnCode.RETURN_CodeMake_UNKNOW_ERROR, e);
+            } catch (InterruptedException e) {
+                return jsonResultNew(ReturnCode.RETURN_CodeMake_UNKNOW_ERROR, e);
+            } catch (ExecutionException e) {
+                return jsonResultNew(ReturnCode.RETURN_CodeMake_UNKNOW_ERROR, e);
+            } catch (TimeoutException e) {
+                return jsonResultNew(ReturnCode.RETURN_CodeMake_TIMEOUT_ERROR, e);
             }
         } else {
             StringBuilder errs = new StringBuilder("");

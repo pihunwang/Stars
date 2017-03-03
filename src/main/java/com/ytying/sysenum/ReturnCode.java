@@ -16,7 +16,8 @@ public enum ReturnCode {
     RETURN_USER_ALREADY_EXISTS(2005, 1, "该用户已存在", TipType.TOAST),
 
     RETURN_CodeMake_COMPILE_ERROR(3001,1,"编译失败",TipType.TOAST),
-    RETURN_CodeMake_UNKNOW_ERROR(3002,1,"未知错误",TipType.TOAST),
+    RETURN_CodeMake_TIMEOUT_ERROR(3002,1,"程序运行超时",TipType.TOAST),
+    RETURN_CodeMake_UNKNOW_ERROR(3003,1,"未知错误",TipType.TOAST),
 
     RETURN_NOTOKEN_ERROR(9998, 98, "无权限访问，请登录!", TipType.TOAST),
     RETURN_TOKEN_OUTDATE(9999, 99, "您的Token已过期，请重新登录!", TipType.TOAST);

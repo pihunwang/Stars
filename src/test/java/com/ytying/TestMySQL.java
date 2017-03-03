@@ -1,6 +1,7 @@
 package com.ytying;
 
 import com.ytying.compiler.CompilerClassLoader;
+import com.ytying.compiler.CompilerPrintStream;
 import com.ytying.compiler.JavaSourceFromString;
 import com.ytying.constant.Dir;
 import com.ytying.util.StringUtils;
@@ -22,6 +23,10 @@ import java.net.URLClassLoader;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Random;
+import java.util.concurrent.Callable;
+import java.util.concurrent.FutureTask;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * Created by kefan.wkf on 17/1/13.
@@ -46,14 +51,18 @@ public class TestMySQL {
         JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
         String sOutputPath = "./target/classes";
 
-        String className = "hei";
+        String className = "Main";
         StringWriter writer = new StringWriter();
         PrintWriter out = new PrintWriter(writer);
-        out.println("public class " + className + " {");
-        out.println("  public static void main(String args[]) {");
-        out.println("    System.out.println(\"hooo$textsize-title-small=ppp\");");
-        out.println("  }");
-        out.println("}");
+        out.println("public class Main {\n" +
+                "  public static void main(String[] args) {\n" +
+                "    int a = 0;\n" +
+                "    while(a < 10){\n" +
+                "    \ta += 1;\n" +
+                "    }\n" +
+                "    System.out.println(a);\n" +
+                "  }\n" +
+                "}");
         out.close();
         JavaFileObject file = new JavaSourceFromString(className, writer.toString());
 
@@ -75,18 +84,29 @@ public class TestMySQL {
 
         if (success) {
             try {
-                Class c = Class.forName(className, true, compilerClassLoader);
-                Method main = c.getDeclaredMethod("main", new Class[]{String[].class});
-                main.setAccessible(true);
-                main.invoke(null, new Object[]{null});
-            } catch (ClassNotFoundException e) {
-                System.err.println("Class not found: " + e);
-            } catch (NoSuchMethodException e) {
-                System.err.println("No such method: " + e);
-            } catch (IllegalAccessException e) {
-                System.err.println("Illegal access: " + e);
-            } catch (InvocationTargetException e) {
-                System.err.println("Invocation target: " + e);
+
+                StringBuilder compileResult = new StringBuilder("");
+                System.setOut(new CompilerPrintStream(System.out, compileResult));
+
+                Callable<String> callable = new Callable<String>() {
+                    @Override
+                    public String call() throws Exception {
+                        Class c = Class.forName(className, true, compilerClassLoader);
+                        Method main = c.getDeclaredMethod("main", new Class[]{String[].class});
+                        main.setAccessible(true);
+                        main.invoke(null, new Object[]{null});
+                        System.out.println("com" + compileResult);
+                        return "2";
+                    }
+                };
+                FutureTask<String> future = new FutureTask<String>(callable);
+                new Thread(future).start();
+                future.get(5000, TimeUnit.MILLISECONDS);
+
+                System.out.println("compileResult" + compileResult);
+
+            } catch (TimeoutException e) {
+                System.out.println("timeout");
             }
         } else {
             StringBuilder errs = new StringBuilder("");
