@@ -12,10 +12,20 @@ import javax.persistence.Table;
 public class UserCode {
 
     @Id
+    private int id;
     private int uid;
     private String source_code;
     private String class_code;
     private long time;
+    private String status;
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
 
     public int getUid() {
         return uid;
@@ -47,5 +57,13 @@ public class UserCode {
 
     public void setTime(long time) {
         this.time = time;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 }

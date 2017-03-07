@@ -37,7 +37,7 @@ public class HibernateUtils {
         }
     }
 
-    public void delete(Object entity){
+    public boolean delete(Object entity){
         Session session = null;
         Transaction tx = null;
         try {
@@ -45,9 +45,10 @@ public class HibernateUtils {
             tx = session.beginTransaction();
             session.delete(entity);
             tx.commit();
+            return true;
         }catch (HibernateException e){
             e.printStackTrace();
-            throw e;
+            return false;
         }finally {
             if(session != null) {
                 session.close();

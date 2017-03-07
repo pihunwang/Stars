@@ -23,9 +23,10 @@ public class TokenInterceptor extends HandlerInterceptorAdapter {
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
 
         String token = request.getParameter("token");
+        int uid = Integer.parseInt(request.getParameter("uid"));
         UserAccount account = TokenCache.get(token);
 
-        if (null == token || null == account) {
+        if (null == token || null == account || account.getUid() != uid) {
             setResponseContent(response, ReturnCode.RETURN_NOTOKEN_ERROR);
             return false;
         }

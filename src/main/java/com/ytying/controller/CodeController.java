@@ -2,6 +2,7 @@ package com.ytying.controller;
 
 import com.ytying.compiler.CompilerClassLoader;
 import com.ytying.entity.UserCode;
+import com.ytying.packaged.UserCodeDo;
 import com.ytying.service.UserCodeService;
 import com.ytying.sysenum.ReturnCode;
 import com.ytying.compiler.CompilerPrintStream;
@@ -16,8 +17,10 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import javax.tools.*;
 import java.io.*;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 import java.util.concurrent.*;
 
 /**
@@ -32,6 +35,7 @@ public class CodeController extends BaseController {
 
     // 项目Class文件所在绝对路径
     private String dir = this.getClass().getResource("/").getPath();
+
 
     @RequestMapping(value = "/sourceCompiler")
     @ResponseBody
@@ -68,18 +72,26 @@ public class CodeController extends BaseController {
         boolean success = task.call();
         System.out.println("Success: " + success);
 
-        if (success) {
-            //保存用户代码到数据库
+        // 保存用户代码到数据库
+        if (uid != 1) {
             UserCode userCode = new UserCode();
             userCode.setUid(uid);
             userCode.setSource_code(source);
             userCode.setTime(new Date().getTime());
+            if (success) {
+                userCode.setStatus("success");
+            } else {
+                userCode.setStatus("danger");
+            }
             userCodeService.addUserCode(userCode);
+        }
+
+        if (success) {
             try {
                 StringBuilder compileResult = new StringBuilder("");
                 System.setOut(new CompilerPrintStream(System.out, compileResult));
 
-
+                // 启动一个线程来运行用户代码
                 Callable<String> callable = new Callable<String>() {
                     @Override
                     public String call() throws Exception {
@@ -87,14 +99,15 @@ public class CodeController extends BaseController {
                         Method main = c.getDeclaredMethod("main", new Class[]{String[].class});
                         main.setAccessible(true);
                         main.invoke(null, new Object[]{null});
-                        return jsonResultNew(ReturnCode.RETURN_SUCCESS,compileResult.toString());
+                        // TODO kefan.wkf Is this return useful?
+                        return jsonResultNew(ReturnCode.RETURN_SUCCESS, compileResult.toString());
                     }
                 };
                 FutureTask<String> future = new FutureTask<String>(callable);
                 new Thread(future).start();
                 future.get(5000, TimeUnit.MILLISECONDS);    // 设置超时时间,以防用户提交死循环代码
 
-                return jsonResultNew(ReturnCode.RETURN_SUCCESS,compileResult.toString());
+                return jsonResultNew(ReturnCode.RETURN_SUCCESS, compileResult.toString());
             } catch (NullPointerException e) {
                 return jsonResultNew(ReturnCode.RETURN_CodeMake_UNKNOW_ERROR, e);
             } catch (InterruptedException e) {
@@ -114,4 +127,37 @@ public class CodeController extends BaseController {
         }
     }
 
+    @RequestMapping(value = "/userCodeListGet")
+    @ResponseBody
+    public String getUserCodeListByUid(@RequestParam int uid) {
+        List<UserCode> list = userCodeService.getUserCodeList(uid);
+        if (null == list) {
+            return jsonResultNew(ReturnCode.RETURN_ERROR, null);
+        }
+        List<UserCodeDo> returnList = new ArrayList<>();
+        for (UserCode userCode : list) {
+            UserCodeDo userCodeDo = new UserCodeDo();
+            userCodeDo.setUid(userCode.getUid());
+            userCodeDo.setCode(userCode.getSource_code());
+            userCodeDo.setId(userCode.getId());
+            userCodeDo.setStatus(userCode.getStatus());
+            long time = userCode.getTime();
+            String format = "yyyy-MM-dd";
+            String date = StringUtils.transferLongToDate(format, time);
+            userCodeDo.setDate(date);
+            returnList.add(userCodeDo);
+        }
+        return jsonResultNew(ReturnCode.RETURN_SUCCESS, returnList);
+    }
+
+    @RequestMapping(value = "/userCodeRemove")
+    @ResponseBody
+    public String removeUserCode(@RequestParam int id, int uid) {
+        boolean success = userCodeService.removeUserCode(id, uid);
+        if (success) {
+            return jsonResultNew(ReturnCode.RETURN_SUCCESS, null);
+        } else {
+            return jsonResultNew(ReturnCode.RETURN_ERROR, null);
+        }
+    }
 }

@@ -2,6 +2,8 @@ package com.ytying.util;
 
 import com.sun.org.apache.xerces.internal.impl.xpath.regex.Match;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -15,6 +17,12 @@ public class StringUtils {
             return true;
         }
         return false;
+    }
+
+    public static String transferLongToDate(String dateFormat,Long millSec){
+        SimpleDateFormat sdf = new SimpleDateFormat(dateFormat);
+        Date date= new Date(millSec);
+        return sdf.format(date);
     }
 
     /**
