@@ -88,6 +88,7 @@ public class CodeController extends BaseController {
 
         if (success) {
             try {
+
                 StringBuilder compileResult = new StringBuilder("");
                 System.setOut(new CompilerPrintStream(System.out, compileResult));
 

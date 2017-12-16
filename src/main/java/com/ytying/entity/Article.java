@@ -3,13 +3,14 @@ package com.ytying.entity;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import java.io.Serializable;
 
 /**
  * Created by kefan.wkf on 17/2/20.
  */
 @Entity
 @Table(name = "article")
-public class Article {
+public class Article implements Serializable{
 
     @Id
     private int id;

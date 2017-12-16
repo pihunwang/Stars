@@ -24,6 +24,21 @@ public class JsonUtils {
     }
 
     /**
+     * String转T
+     */
+    public static <T> T Json2T(String str, Class<T> classOfT,T def) {
+        if (null == str || "".equals(str)) {
+            return def;
+        }
+        try {
+            return JSON.parseObject(str, classOfT);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return def;
+        }
+    }
+
+    /**
      * 将json转换成为jsonArray对象
      */
     public static JSONArray Json2JsonArray(String str) {
