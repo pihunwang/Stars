@@ -22,6 +22,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.*;
+import java.util.function.BinaryOperator;
 
 /**
  * Created by kefan.wkf on 17/1/23.
@@ -87,22 +88,18 @@ public class CodeController extends BaseController {
         }
 
         if (success) {
+            StringBuilder compileResult = new StringBuilder("");
+            CompilerPrintStream compilerPrintStream = new CompilerPrintStream(System.out, compileResult);
+            System.setOut(compilerPrintStream);
             try {
-
-                StringBuilder compileResult = new StringBuilder("");
-                System.setOut(new CompilerPrintStream(System.out, compileResult));
-
                 // 启动一个线程来运行用户代码
-                Callable<String> callable = new Callable<String>() {
-                    @Override
-                    public String call() throws Exception {
-                        Class c = Class.forName(className, true, compilerClassLoader);
-                        Method main = c.getDeclaredMethod("main", new Class[]{String[].class});
-                        main.setAccessible(true);
-                        main.invoke(null, new Object[]{null});
-                        // TODO kefan.wkf Is this return useful?
-                        return jsonResultNew(ReturnCode.RETURN_SUCCESS, compileResult.toString());
-                    }
+                Callable<String> callable = () -> {
+                    Class c = Class.forName(className, true, compilerClassLoader);
+                    Method main = c.getDeclaredMethod("main", new Class[]{String[].class});
+                    main.setAccessible(true);
+                    main.invoke(null, new Object[]{null});
+                    // TODO kefan.wkf Is this return useful?
+                    return jsonResultNew(ReturnCode.RETURN_SUCCESS, compileResult.toString());
                 };
                 FutureTask<String> future = new FutureTask<String>(callable);
                 new Thread(future).start();
@@ -117,6 +114,8 @@ public class CodeController extends BaseController {
                 return jsonResultNew(ReturnCode.RETURN_CodeMake_UNKNOW_ERROR, e);
             } catch (TimeoutException e) {
                 return jsonResultNew(ReturnCode.RETURN_CodeMake_TIMEOUT_ERROR, e);
+            }finally {
+                compilerPrintStream.close();
             }
         } else {
             StringBuilder errs = new StringBuilder("");
@@ -136,18 +135,20 @@ public class CodeController extends BaseController {
             return jsonResultNew(ReturnCode.RETURN_ERROR, null);
         }
         List<UserCodeDo> returnList = new ArrayList<>();
-        for (UserCode userCode : list) {
-            UserCodeDo userCodeDo = new UserCodeDo();
-            userCodeDo.setUid(userCode.getUid());
-            userCodeDo.setCode(userCode.getSource_code());
-            userCodeDo.setId(userCode.getId());
-            userCodeDo.setStatus(userCode.getStatus());
-            long time = userCode.getTime();
-            String format = "yyyy-MM-dd";
-            String date = StringUtils.transferLongToDate(format, time);
-            userCodeDo.setDate(date);
-            returnList.add(userCodeDo);
-        }
+        list.forEach(
+                userCode -> {
+                    UserCodeDo userCodeDo = new UserCodeDo();
+                    userCodeDo.setUid(userCode.getUid());
+                    userCodeDo.setCode(userCode.getSource_code());
+                    userCodeDo.setId(userCode.getId());
+                    userCodeDo.setStatus(userCode.getStatus());
+                    long time = userCode.getTime();
+                    String format = "yyyy-MM-dd";
+                    String date = StringUtils.transferLongToDate(format, time);
+                    userCodeDo.setDate(date);
+                    returnList.add(userCodeDo);
+                }
+        );
         return jsonResultNew(ReturnCode.RETURN_SUCCESS, returnList);
     }
 
