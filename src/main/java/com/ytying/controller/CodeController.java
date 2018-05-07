@@ -89,9 +89,8 @@ public class CodeController extends BaseController {
 
         if (success) {
             StringBuilder compileResult = new StringBuilder("");
-            CompilerPrintStream compilerPrintStream = new CompilerPrintStream(System.out, compileResult);
-            System.setOut(compilerPrintStream);
-            try {
+            try (CompilerPrintStream compilerPrintStream = new CompilerPrintStream(System.out, compileResult)) {
+                System.setOut(compilerPrintStream);
                 // 启动一个线程来运行用户代码
                 Callable<String> callable = () -> {
                     Class c = Class.forName(className, true, compilerClassLoader);
@@ -114,8 +113,6 @@ public class CodeController extends BaseController {
                 return jsonResultNew(ReturnCode.RETURN_CodeMake_UNKNOW_ERROR, e);
             } catch (TimeoutException e) {
                 return jsonResultNew(ReturnCode.RETURN_CodeMake_TIMEOUT_ERROR, e);
-            }finally {
-                compilerPrintStream.close();
             }
         } else {
             StringBuilder errs = new StringBuilder("");
